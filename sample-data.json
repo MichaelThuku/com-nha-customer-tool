@@ -1,0 +1,40 @@
+{
+  "customers": [
+    {
+      "customer_id": 1001,
+      "full_name": "Anh Nguyen",
+      "phone": "0412 555 120",
+      "email": "anh.nguyen@example.com",
+      "date_of_birth": "1994-11-08",
+      "status": "Returning",
+      "preferences": [
+        "Window seating",
+        "Vegetarian",
+        "Sparkling water"
+      ]
+    },
+    {
+      "customer_id": 1002,
+      "full_name": "Sophie Martin",
+      "phone": "0433 901 442",
+      "email": "sophie.martin@example.com",
+      "date_of_birth": "1998-03-22",
+      "status": "Returning",
+      "preferences": [
+        "No peanuts",
+        "Outdoor seating"
+      ]
+    },
+    {
+      "customer_id": 1003,
+      "full_name": "Daniel Lee",
+      "phone": "0401 774 226",
+      "email": "daniel.lee@example.com",
+      "date_of_birth": "2000-12-02",
+      "status": "New",
+      "preferences": [
+        "Favourite dish: Bún bò Huế"
+      ]
+    }
+  ]
+}

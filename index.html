@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cơm Nhà Customer Information Tool</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div>
+        <div class="brand">
+          <div class="brand-mark">CN</div>
+          <div>
+            <h1>Cơm Nhà</h1>
+            <p>Customer Information Tool</p>
+          </div>
+        </div>
+
+        <nav>
+          <button class="nav-item active" data-view="dashboard">Dashboard</button>
+          <button class="nav-item" data-view="customers">Customers</button>
+          <button class="nav-item" data-view="about">Prototype Notes</button>
+        </nav>
+      </div>
+
+      <div class="staff-card">
+        <div class="avatar">MT</div>
+        <div>
+          <strong>Michael Thuku</strong>
+          <span>Staff User • Prototype</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h2 id="page-title">Dashboard</h2>
+          <p>Simple customer lookup and relationship support for restaurant staff.</p>
+        </div>
+        <div class="badge secure">Authorised staff only</div>
+      </header>
+
+      <section id="dashboard-view" class="view active-view">
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span>Total Customers</span>
+            <strong id="total-customers">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Returning Customers</span>
+            <strong id="returning-customers">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Upcoming Birthdays</span>
+            <strong id="birthday-count">0</strong>
+          </article>
+        </div>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Quick Customer Search</h3>
+              <p>Search by name, phone number or email.</p>
+            </div>
+          </div>
+
+          <div class="search-row">
+            <input id="dashboard-search" type="text" placeholder="Search customers..." />
+            <button id="dashboard-search-btn" class="primary-btn">Search</button>
+          </div>
+          <div id="dashboard-results" class="results-list compact"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Prototype Scope</h3>
+              <p>Core functions being demonstrated in Week 10.</p>
+            </div>
+          </div>
+          <div class="scope-grid">
+            <div class="scope-item">Customer search</div>
+            <div class="scope-item">New / returning indicator</div>
+            <div class="scope-item">Visit history</div>
+            <div class="scope-item">Preferences</div>
+            <div class="scope-item">Staff notes</div>
+            <div class="scope-item">Simple staff access concept</div>
+          </div>
+        </section>
+      </section>
+
+      <section id="customers-view" class="view">
+        <section class="panel">
+          <div class="panel-heading split">
+            <div>
+              <h3>Customer Lookup</h3>
+              <p>Find a customer and review relevant relationship information.</p>
+            </div>
+            <button id="add-customer-btn" class="secondary-btn">+ Add Customer</button>
+          </div>
+
+          <div class="search-row">
+            <input id="customer-search" type="text" placeholder="Name, phone or email..." />
+            <button id="customer-search-btn" class="primary-btn">Search</button>
+          </div>
+
+          <div id="customer-results" class="results-list"></div>
+        </section>
+
+        <section id="profile-panel" class="panel hidden">
+          <div class="profile-header">
+            <div>
+              <div class="status-row">
+                <span id="customer-status" class="badge returning">Returning Customer</span>
+                <span id="customer-id-label" class="muted"></span>
+              </div>
+              <h3 id="profile-name"></h3>
+              <p id="profile-contact"></p>
+            </div>
+            <button id="close-profile" class="icon-btn" aria-label="Close profile">×</button>
+          </div>
+
+          <div class="profile-grid">
+            <div class="info-card">
+              <h4>Customer Details</h4>
+              <dl>
+                <div><dt>Birthday</dt><dd id="profile-birthday">—</dd></div>
+                <div><dt>Phone</dt><dd id="profile-phone">—</dd></div>
+                <div><dt>Email</dt><dd id="profile-email">—</dd></div>
+                <div><dt>Total Visits</dt><dd id="profile-visits-count">0</dd></div>
+              </dl>
+            </div>
+
+            <div class="info-card">
+              <h4>Preferences</h4>
+              <div id="preferences-list" class="chip-list"></div>
+            </div>
+          </div>
+
+          <div class="info-card full">
+            <h4>Visit History</h4>
+            <div id="visit-history"></div>
+          </div>
+
+          <div class="info-card full">
+            <div class="panel-heading split">
+              <div>
+                <h4>Customer Notes</h4>
+                <p>Relevant service notes only. Avoid unnecessary sensitive information.</p>
+              </div>
+            </div>
+            <div id="notes-list" class="notes-list"></div>
+
+            <div class="note-entry">
+              <textarea id="new-note" rows="3" placeholder="Add an appropriate customer service note..."></textarea>
+              <button id="save-note-btn" class="primary-btn">Add Note</button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="about-view" class="view">
+        <section class="panel">
+          <h3>Week 10 Prototype Notes</h3>
+          <p>
+            This prototype demonstrates the proposed Customer Information & Relationship Tool for
+            Cơm Nhà Restaurant. It is intentionally limited to the agreed project scope and does not
+            replace the restaurant's full POS or reservation platform.
+          </p>
+
+          <div class="about-list">
+            <div>
+              <strong>Purpose</strong>
+              <span>Help staff identify new and returning customers and access useful relationship information.</span>
+            </div>
+            <div>
+              <strong>Current implementation</strong>
+              <span>Browser-based front-end prototype using sample data for testing and demonstration.</span>
+            </div>
+            <div>
+              <strong>Next steps</strong>
+              <span>Validate fields and workflow with Jimmy, refine interface, test against requirements, then document outcomes.</span>
+            </div>
+            <div>
+              <strong>Out of scope</strong>
+              <span>Full POS replacement, payment card storage, bulk marketing automation and website redesign.</span>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="add-customer-modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="profile-header">
+        <div>
+          <h3>Add New Customer</h3>
+          <p>This demonstrates the new-customer workflow.</p>
+        </div>
+        <button id="close-modal" class="icon-btn">×</button>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          Full name
+          <input id="new-name" type="text" />
+        </label>
+        <label>
+          Phone
+          <input id="new-phone" type="text" />
+        </label>
+        <label>
+          Email
+          <input id="new-email" type="email" />
+        </label>
+        <label>
+          Date of birth
+          <input id="new-dob" type="date" />
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button id="cancel-add-customer" class="secondary-btn">Cancel</button>
+        <button id="save-customer" class="primary-btn">Save Customer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
