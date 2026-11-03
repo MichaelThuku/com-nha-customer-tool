@@ -41,7 +41,21 @@ const seedCustomers = [
   }
 ];
 
+
+const defaultCategories = [
+  "Vegan",
+  "Vegetarian",
+  "Allergy / dietary requirement",
+  "Window seating",
+  "Outdoor seating",
+  "Quiet seating",
+  "Favourite dish",
+  "Special occasion"
+];
+
 let customers = JSON.parse(localStorage.getItem("comNhaCustomers")) || seedCustomers;
+let categories = JSON.parse(localStorage.getItem("comNhaCategories")) || defaultCategories;
+let currentRole = localStorage.getItem("comNhaRole") || "staff";
 let activeCustomerId = null;
 
 function saveCustomers() {
@@ -71,14 +85,18 @@ function customerStatus(customer) {
   return customer.visits.length > 0 ? "Returning Customer" : "New Customer";
 }
 
+function normalisePhone(value) {
+  return (value || "").replace(/\D/g, "");
+}
+
 function matches(customer, query) {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  return [
-    customer.fullName,
-    customer.phone,
-    customer.email
-  ].some(value => (value || "").toLowerCase().includes(q));
+  const phoneQuery = normalisePhone(q);
+  const phoneMatch = phoneQuery.length >= 3 && normalisePhone(customer.phone).includes(phoneQuery);
+  return phoneMatch ||
+    (customer.fullName || "").toLowerCase().includes(q) ||
+    (customer.email || "").toLowerCase().includes(q);
 }
 
 function resultMarkup(customer) {
@@ -138,6 +156,8 @@ function showCustomerProfile(id) {
       ? customer.preferences.map(p => `<span class="chip">${p}</span>`).join("")
       : `<span class="muted">No preferences recorded.</span>`;
 
+  renderQuickCategories(customer);
+
   document.getElementById("visit-history").innerHTML =
     customer.visits.length
       ? `
@@ -178,23 +198,175 @@ function showCustomerProfile(id) {
 }
 
 function switchView(viewName) {
+  if (viewName === "manager" && currentRole !== "manager") return;
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active-view"));
   document.getElementById(`${viewName}-view`).classList.add("active-view");
 
-  document.querySelectorAll(".nav-item").forEach(item => {
+  function renderQuickCategories(customer) {
+  const target = document.getElementById("quick-categories");
+  target.innerHTML = categories.map(category => {
+    const selected = customer.preferences.includes(category);
+    return `<button type="button" class="category-btn ${selected ? "selected" : ""}" data-category="${category}">${selected ? "✓ " : ""}${category}</button>`;
+  }).join("");
+
+  target.querySelectorAll(".category-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      const value = button.dataset.category;
+      const index = customer.preferences.indexOf(value);
+      if (index >= 0) customer.preferences.splice(index, 1);
+      else customer.preferences.push(value);
+      saveCustomers();
+      showCustomerProfile(customer.id);
+      updateManagerStats();
+    });
+  });
+}
+
+function updateManagerStats() {
+  const total = customers.length || 1;
+  const dietaryTerms = ["Vegan", "Vegetarian", "Allergy / dietary requirement"];
+  const returning = customers.filter(c => c.visits.length > 0).length;
+  const dietary = customers.filter(c => c.preferences.some(p => dietaryTerms.includes(p))).length;
+  const withPreferences = customers.filter(c => c.preferences.length > 0).length;
+  const withBirthday = customers.filter(c => Boolean(c.dob)).length;
+  const pct = n => `${Math.round((n / total) * 100)}%`;
+  document.getElementById("pct-returning").textContent = pct(returning);
+  document.getElementById("pct-dietary").textContent = pct(dietary);
+  document.getElementById("pct-preferences").textContent = pct(withPreferences);
+  document.getElementById("pct-birthday").textContent = pct(withBirthday);
+}
+
+function saveCategories() {
+  localStorage.setItem("comNhaCategories", JSON.stringify(categories));
+  renderManagerCategories();
+  if (activeCustomerId !== null) {
+    const c = customers.find(x => x.id === activeCustomerId);
+    if (c) renderQuickCategories(c);
+  }
+}
+
+function renderManagerCategories() {
+  const target = document.getElementById("manager-category-list");
+  if (!target) return;
+  target.innerHTML = categories.map(category => `<span class="manager-category-item">${category}<button type="button" class="remove-category-btn" data-category="${category}">×</button></span>`).join("");
+  target.querySelectorAll(".remove-category-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      if (currentRole !== "manager") return;
+      categories = categories.filter(c => c !== button.dataset.category);
+      saveCategories();
+    });
+  });
+}
+
+function applyRole() {
+  const isManager = currentRole === "manager";
+  document.getElementById("role-select").value = currentRole;
+  document.getElementById("sidebar-role").textContent = isManager ? "Manager access • Prototype" : "Staff access • Prototype";
+  document.querySelectorAll(".manager-nav").forEach(el => el.classList.toggle("hidden", !isManager));
+  if (!isManager && document.getElementById("manager-view").classList.contains("active-view")) switchView("dashboard");
+}
+
+document.querySelectorAll(".nav-item").forEach(item => {
     item.classList.toggle("active", item.dataset.view === viewName);
   });
 
   const titles = {
     dashboard: "Dashboard",
     customers: "Customers",
+    manager: "Manager",
     about: "Prototype Notes"
   };
   document.getElementById("page-title").textContent = titles[viewName];
+  if (viewName === "manager") {
+    updateManagerStats();
+    renderManagerCategories();
+  }
+}
+
+function renderQuickCategories(customer) {
+  const target = document.getElementById("quick-categories");
+  target.innerHTML = categories.map(category => {
+    const selected = customer.preferences.includes(category);
+    return `<button type="button" class="category-btn ${selected ? "selected" : ""}" data-category="${category}">${selected ? "✓ " : ""}${category}</button>`;
+  }).join("");
+
+  target.querySelectorAll(".category-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      const value = button.dataset.category;
+      const index = customer.preferences.indexOf(value);
+      if (index >= 0) customer.preferences.splice(index, 1);
+      else customer.preferences.push(value);
+      saveCustomers();
+      showCustomerProfile(customer.id);
+      updateManagerStats();
+    });
+  });
+}
+
+function updateManagerStats() {
+  const total = customers.length || 1;
+  const dietaryTerms = ["Vegan", "Vegetarian", "Allergy / dietary requirement"];
+  const returning = customers.filter(c => c.visits.length > 0).length;
+  const dietary = customers.filter(c => c.preferences.some(p => dietaryTerms.includes(p))).length;
+  const withPreferences = customers.filter(c => c.preferences.length > 0).length;
+  const withBirthday = customers.filter(c => Boolean(c.dob)).length;
+  const pct = n => `${Math.round((n / total) * 100)}%`;
+  document.getElementById("pct-returning").textContent = pct(returning);
+  document.getElementById("pct-dietary").textContent = pct(dietary);
+  document.getElementById("pct-preferences").textContent = pct(withPreferences);
+  document.getElementById("pct-birthday").textContent = pct(withBirthday);
+}
+
+function saveCategories() {
+  localStorage.setItem("comNhaCategories", JSON.stringify(categories));
+  renderManagerCategories();
+  if (activeCustomerId !== null) {
+    const c = customers.find(x => x.id === activeCustomerId);
+    if (c) renderQuickCategories(c);
+  }
+}
+
+function renderManagerCategories() {
+  const target = document.getElementById("manager-category-list");
+  if (!target) return;
+  target.innerHTML = categories.map(category => `<span class="manager-category-item">${category}<button type="button" class="remove-category-btn" data-category="${category}">×</button></span>`).join("");
+  target.querySelectorAll(".remove-category-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      if (currentRole !== "manager") return;
+      categories = categories.filter(c => c !== button.dataset.category);
+      saveCategories();
+    });
+  });
+}
+
+function applyRole() {
+  const isManager = currentRole === "manager";
+  document.getElementById("role-select").value = currentRole;
+  document.getElementById("sidebar-role").textContent = isManager ? "Manager access • Prototype" : "Staff access • Prototype";
+  document.querySelectorAll(".manager-nav").forEach(el => el.classList.toggle("hidden", !isManager));
+  if (!isManager && document.getElementById("manager-view").classList.contains("active-view")) switchView("dashboard");
 }
 
 document.querySelectorAll(".nav-item").forEach(item => {
   item.addEventListener("click", () => switchView(item.dataset.view));
+});
+
+document.getElementById("role-select").addEventListener("change", e => {
+  currentRole = e.target.value;
+  localStorage.setItem("comNhaRole", currentRole);
+  applyRole();
+});
+
+document.getElementById("add-category-btn").addEventListener("click", () => {
+  if (currentRole !== "manager") return;
+  const input = document.getElementById("new-category-input");
+  const value = input.value.trim();
+  if (!value) return;
+  if (!categories.some(c => c.toLowerCase() === value.toLowerCase())) {
+    categories.push(value);
+    saveCategories();
+  }
+  input.value = "";
 });
 
 document.getElementById("customer-search-btn").addEventListener("click", () => {
@@ -247,15 +419,16 @@ document.getElementById("cancel-add-customer").addEventListener("click", closeMo
 
 document.getElementById("save-customer").addEventListener("click", () => {
   const name = document.getElementById("new-name").value.trim();
-  if (!name) {
-    alert("Please enter a customer name.");
+  const phone = document.getElementById("new-phone").value.trim();
+  if (!name || !phone) {
+    alert("Please enter the customer name and phone number.");
     return;
   }
 
   const newCustomer = {
     id: Math.max(...customers.map(c => c.id), 1000) + 1,
     fullName: name,
-    phone: document.getElementById("new-phone").value.trim(),
+    phone,
     email: document.getElementById("new-email").value.trim(),
     dob: document.getElementById("new-dob").value,
     preferences: [],
@@ -276,5 +449,8 @@ document.getElementById("save-customer").addEventListener("click", () => {
 });
 
 updateDashboardStats();
+updateManagerStats();
+renderManagerCategories();
 renderResults("customer-results", "");
 renderResults("dashboard-results", "");
+applyRole();
