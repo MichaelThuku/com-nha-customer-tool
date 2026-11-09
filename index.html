@@ -1,293 +1,477 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cơm Nhà Customer Information Tool</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cơm Nhà Reservation & Customer Tool</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar">
+
+<!-- LOGIN -->
+<section id="login-screen" class="login-screen">
+  <div class="login-brand">
+    <div class="brand-lockup">
+      <div class="logo-stamp">CN</div>
       <div>
-        <div class="brand">
-          <div class="brand-mark">CN</div>
-          <div>
-            <h1>Cơm Nhà</h1>
-            <p>Customer Information Tool</p>
-          </div>
-        </div>
-
-        <nav>
-          <button class="nav-item active" data-view="dashboard">Dashboard</button>
-          <button class="nav-item" data-view="customers">Customers</button>
-          <button class="nav-item manager-nav hidden" data-view="manager">Manager</button>
-          <button class="nav-item" data-view="about">Prototype Notes</button>
-        </nav>
+        <span class="brand-name">Cơm Nhà</span>
+        <span class="brand-sub">Reservation & Customer Tool</span>
       </div>
+    </div>
 
-      <div class="staff-card">
-        <div class="avatar">MT</div>
-        <div>
-          <strong>Michael Thuku</strong>
-          <span id="sidebar-role">Staff access • Prototype</span>
-        </div>
-      </div>
-    </aside>
+    <div class="login-welcome">
+      <span class="eyebrow light">STAFF TOOL</span>
+      <h1>Good service starts with remembering people.</h1>
+      <p>
+        A simple place for the Cơm Nhà team to recognise callers, welcome walk-ins, manage arrivals,
+        and keep useful customer details close at hand.
+      </p>
+    </div>
 
-    <main class="main-content">
-      <header class="topbar">
-        <div>
-          <h2 id="page-title">Dashboard</h2>
-          <p>Simple customer lookup and relationship support for restaurant staff.</p>
-        </div>
-        <div class="top-actions">
-          <label class="role-control">
-            <span>Demo access</span>
-            <select id="role-select">
-              <option value="staff">Staff</option>
-              <option value="manager">Manager</option>
-            </select>
-          </label>
-          <div class="badge secure">Authorised staff only</div>
-        </div>
-      </header>
-
-      <section id="dashboard-view" class="view active-view">
-        <div class="stats-grid">
-          <article class="stat-card">
-            <span>Total Customers</span>
-            <strong id="total-customers">0</strong>
-          </article>
-          <article class="stat-card">
-            <span>Returning Customers</span>
-            <strong id="returning-customers">0</strong>
-          </article>
-          <article class="stat-card">
-            <span>Upcoming Birthdays</span>
-            <strong id="birthday-count">0</strong>
-          </article>
-        </div>
-
-        <section class="panel">
-          <div class="panel-heading">
-            <div>
-              <h3>Quick Customer Search</h3>
-              <p>Phone number is the preferred identifier. Name and email also work.</p>
-            </div>
-          </div>
-
-          <div class="search-row">
-            <input id="dashboard-search" type="search" inputmode="tel" placeholder="Phone number, name or email..." />
-            <button id="dashboard-search-btn" class="primary-btn">Search</button>
-          </div>
-          <div id="dashboard-results" class="results-list compact"></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-heading">
-            <div>
-              <h3>Prototype Scope</h3>
-              <p>Core functions being demonstrated in Week 10.</p>
-            </div>
-          </div>
-          <div class="scope-grid">
-            <div class="scope-item">Customer search</div>
-            <div class="scope-item">New / returning indicator</div>
-            <div class="scope-item">Visit history</div>
-            <div class="scope-item">Preferences</div>
-            <div class="scope-item">Staff notes</div>
-            <div class="scope-item">Simple staff access concept</div>
-          </div>
-        </section>
-      </section>
-
-      <section id="customers-view" class="view">
-        <section class="panel">
-          <div class="panel-heading split">
-            <div>
-              <h3>Customer Lookup</h3>
-              <p>Phone number is the preferred identifier for quick lookup.</p>
-            </div>
-            <button id="add-customer-btn" class="secondary-btn">+ Add Customer</button>
-          </div>
-
-          <div class="search-row">
-            <input id="customer-search" type="search" inputmode="tel" placeholder="Phone number (recommended), name or email..." />
-            <button id="customer-search-btn" class="primary-btn">Search</button>
-          </div>
-
-          <div id="customer-results" class="results-list"></div>
-        </section>
-
-        <section id="profile-panel" class="panel hidden">
-          <div class="profile-header">
-            <div>
-              <div class="status-row">
-                <span id="customer-status" class="badge returning">Returning Customer</span>
-                <span id="customer-id-label" class="muted"></span>
-              </div>
-              <h3 id="profile-name"></h3>
-              <p id="profile-contact"></p>
-            </div>
-            <button id="close-profile" class="icon-btn" aria-label="Close profile">×</button>
-          </div>
-
-          <div class="profile-grid">
-            <div class="info-card">
-              <h4>Customer Details</h4>
-              <dl>
-                <div><dt>Birthday</dt><dd id="profile-birthday">—</dd></div>
-                <div><dt>Phone</dt><dd id="profile-phone">—</dd></div>
-                <div><dt>Email</dt><dd id="profile-email">—</dd></div>
-                <div><dt>Total Visits</dt><dd id="profile-visits-count">0</dd></div>
-              </dl>
-            </div>
-
-            <div class="info-card">
-              <h4>Preferences & Categories</h4>
-              <p>Tap a category to add or remove it quickly.</p>
-              <div id="preferences-list" class="chip-list"></div>
-              <div id="quick-categories" class="quick-category-grid"></div>
-            </div>
-          </div>
-
-          <div class="info-card full">
-            <h4>Visit History</h4>
-            <div id="visit-history"></div>
-          </div>
-
-          <div class="info-card full">
-            <div class="panel-heading split">
-              <div>
-                <h4>Customer Notes</h4>
-                <p>Relevant service notes only. Avoid unnecessary sensitive information.</p>
-              </div>
-            </div>
-            <div id="notes-list" class="notes-list"></div>
-
-            <div class="note-entry">
-              <textarea id="new-note" rows="3" placeholder="Add an appropriate customer service note..."></textarea>
-              <button id="save-note-btn" class="primary-btn">Add Note</button>
-            </div>
-          </div>
-        </section>
-      </section>
-
-
-      <section id="manager-view" class="view">
-        <section class="panel">
-          <div class="panel-heading">
-            <div>
-              <h3>Manager Summary</h3>
-              <p>Summarised percentages from the current customer data.</p>
-            </div>
-          </div>
-          <div class="manager-stats">
-            <article class="stat-card"><span>Returning customers</span><strong id="pct-returning">0%</strong></article>
-            <article class="stat-card"><span>Customers with dietary data</span><strong id="pct-dietary">0%</strong></article>
-            <article class="stat-card"><span>Customers with preferences</span><strong id="pct-preferences">0%</strong></article>
-            <article class="stat-card"><span>Birthday recorded</span><strong id="pct-birthday">0%</strong></article>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-heading">
-            <div>
-              <h3>Manage Quick Categories</h3>
-              <p>Managers can add categories without editing the website code.</p>
-            </div>
-          </div>
-          <div class="search-row">
-            <input id="new-category-input" type="text" placeholder="e.g. Gluten free" />
-            <button id="add-category-btn" class="primary-btn">Add Category</button>
-          </div>
-          <div id="manager-category-list" class="manager-category-list"></div>
-        </section>
-
-        <section class="panel">
-          <h3>Access Concept</h3>
-          <div class="access-table">
-            <div class="access-row header"><span>Function</span><span>Staff</span><span>Manager</span></div>
-            <div class="access-row"><span>Search customers</span><span>✓</span><span>✓</span></div>
-            <div class="access-row"><span>View customer details</span><span>✓</span><span>✓</span></div>
-            <div class="access-row"><span>Add service notes</span><span>✓</span><span>✓</span></div>
-            <div class="access-row"><span>Update preferences</span><span>✓</span><span>✓</span></div>
-            <div class="access-row"><span>Manage categories</span><span>—</span><span>✓</span></div>
-            <div class="access-row"><span>View summary percentages</span><span>—</span><span>✓</span></div>
-            <div class="access-row"><span>Financial information</span><span>—</span><span>Manager only (future)</span></div>
-          </div>
-        </section>
-      </section>
-
-      <section id="about-view" class="view">
-        <section class="panel">
-          <h3>Week 10 Prototype Notes</h3>
-          <p>
-            This prototype demonstrates the proposed Customer Information & Relationship Tool for
-            Cơm Nhà Restaurant. It is intentionally limited to the agreed project scope and does not
-            replace the restaurant's full POS or reservation platform.
-          </p>
-
-          <div class="about-list">
-            <div>
-              <strong>Purpose</strong>
-              <span>Help staff identify new and returning customers and access useful relationship information.</span>
-            </div>
-            <div>
-              <strong>Current implementation</strong>
-              <span>Browser-based prototype using sample data. Jimmy's feedback has been incorporated into the current design.</span>
-            </div>
-            <div>
-              <strong>Next steps</strong>
-              <span>Test the revised workflow, confirm the final new/returning rule, and document client feedback and outcomes.</span>
-            </div>
-            <div>
-              <strong>Out of scope</strong>
-              <span>Full POS replacement, live financial processing, payment card storage, bulk marketing automation and website redesign.</span>
-            </div>
-          </div>
-        </section>
-      </section>
-    </main>
-  </div>
-
-  <div id="add-customer-modal" class="modal hidden">
-    <div class="modal-card">
-      <div class="profile-header">
-        <div>
-          <h3>Add New Customer</h3>
-          <p>This demonstrates the new-customer workflow.</p>
-        </div>
-        <button id="close-modal" class="icon-btn">×</button>
-      </div>
-
-      <div class="form-grid">
-        <label>
-          Full name
-          <input id="new-name" type="text" />
-        </label>
-        <label>
-          Phone
-          <input id="new-phone" type="text" />
-        </label>
-        <label>
-          Email
-          <input id="new-email" type="email" />
-        </label>
-        <label>
-          Date of birth
-          <input id="new-dob" type="date" />
-        </label>
-      </div>
-
-      <div class="modal-actions">
-        <button id="cancel-add-customer" class="secondary-btn">Cancel</button>
-        <button id="save-customer" class="primary-btn">Save Customer</button>
-      </div>
+    <div class="brand-note">
+      <span class="quote-mark">“</span>
+      <p>Fast enough for a phone call. Useful enough for the next visit.</p>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <div class="login-panel">
+    <div class="login-card">
+      <div class="mobile-brand">
+        <div class="logo-stamp small">CN</div>
+        <strong>Cơm Nhà</strong>
+      </div>
+
+      <span class="eyebrow">WELCOME BACK</span>
+      <h2>Sign in to continue</h2>
+      <p class="muted login-intro">Use a staff or manager account to open the prototype.</p>
+
+      <form id="login-form">
+        <label>
+          <span>Username</span>
+          <input id="login-username" autocomplete="username" placeholder="Username">
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="Password">
+        </label>
+        <p id="login-error" class="login-error hidden">Those login details do not match a demo account.</p>
+        <button class="primary login-button" type="submit">Sign in</button>
+      </form>
+
+      <div class="demo-accounts">
+        <div class="demo-heading">
+          <span>Prototype accounts</span>
+          <small>Tap one to fill the login</small>
+        </div>
+
+        <button type="button" class="demo-account" data-user="staff" data-pass="staff123">
+          <span class="account-icon">S</span>
+          <span>
+            <strong>Staff</strong>
+            <small>staff / staff123</small>
+          </span>
+          <span class="account-arrow">→</span>
+        </button>
+
+        <button type="button" class="demo-account" data-user="manager" data-pass="manager123">
+          <span class="account-icon manager-icon">M</span>
+          <span>
+            <strong>Manager</strong>
+            <small>manager / manager123</small>
+          </span>
+          <span class="account-arrow">→</span>
+        </button>
+      </div>
+
+      <p class="prototype-warning">
+        Prototype only. These are demonstration credentials, not production security.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<div id="app-shell" class="app-shell hidden">
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-stamp tiny">CN</div>
+      <span>
+        <strong>Cơm Nhà</strong>
+        <small>Reservation & Customer Tool</small>
+      </span>
+    </div>
+
+    <nav>
+      <button class="nav active" data-view="reservation">Reservations</button>
+      <button class="nav" data-view="customers">Customers</button>
+      <button class="nav insights-nav hidden" data-view="insights">Insights</button>
+    </nav>
+
+    <div class="user-menu">
+      <div class="user-copy">
+        <strong id="signed-in-name">Staff</strong>
+        <small id="signed-in-role">Staff access</small>
+      </div>
+      <div id="user-avatar" class="user-avatar">S</div>
+      <button id="logout" class="logout-btn" type="button">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- RESERVATION VIEW -->
+    <section id="reservation-view" class="view active-view">
+      <div class="welcome-strip">
+        <div>
+          <span id="welcome-greeting" class="eyebrow">WELCOME BACK</span>
+          <h1>Take the call or welcome a walk-in.</h1>
+          <p>Use the same customer record whether they book ahead or arrive at the door.</p>
+        </div>
+        <button id="reset-flow" class="primary warm">Start New</button>
+      </div>
+
+      <div class="service-mode">
+        <button id="mode-reservation" class="mode-card active" type="button">
+          <span class="mode-icon">☎</span>
+          <span><strong>Phone Reservation</strong><small>Check the number, identify the caller, then book.</small></span>
+        </button>
+        <button id="mode-walkin" class="mode-card" type="button">
+          <span class="mode-icon">↪</span>
+          <span><strong>Walk-in</strong><small>Identify or add the guest, then record their arrival.</small></span>
+        </button>
+      </div>
+
+      <div class="work-layout">
+        <div class="work-main">
+          <section class="card lookup-card">
+            <div class="step-row">
+              <span class="step-number">1</span>
+              <div>
+                <h2 id="identity-title">Who’s calling?</h2>
+                <p id="identity-help">Enter the phone number first. The system checks whether the customer already exists.</p>
+              </div>
+            </div>
+
+            <div class="lookup">
+              <label>
+                <span>Phone number</span>
+                <input id="phone" type="tel" inputmode="tel" placeholder="0412 555 120">
+              </label>
+              <button id="check" class="primary">Check Customer</button>
+            </div>
+            <p id="lookup-msg" class="message hidden"></p>
+          </section>
+
+          <section id="existing" class="card hidden">
+            <div class="customer-state existing-state">
+              <div class="state-symbol">✓</div>
+              <div>
+                <small>MATCH FOUND</small>
+                <h2>Existing customer</h2>
+              </div>
+            </div>
+
+            <div class="customer-head">
+              <div>
+                <h2 id="ex-name"></h2>
+                <p id="ex-contact"></p>
+              </div>
+              <div class="metrics">
+                <div><small>Completed visits</small><b id="ex-visits">0</b></div>
+                <div><small>Notes</small><b id="ex-notes">0</b></div>
+              </div>
+            </div>
+
+            <div class="two">
+              <div class="soft-panel">
+                <h3>What they prefer</h3>
+                <div id="ex-prefs" class="chips"></div>
+              </div>
+              <div class="soft-panel">
+                <h3>Last thing we noted</h3>
+                <p id="ex-note" class="muted">No notes recorded.</p>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button id="quick-edit" class="secondary">Quick Update</button>
+              <button id="existing-continue" class="primary">Continue</button>
+            </div>
+          </section>
+
+          <section id="new-customer" class="card hidden">
+            <div class="customer-state new-state">
+              <div class="state-symbol">+</div>
+              <div>
+                <small>NO MATCH FOUND</small>
+                <h2>New customer</h2>
+              </div>
+            </div>
+
+            <div class="step-row">
+              <span class="step-number">2</span>
+              <div>
+                <h2>Add the remaining details</h2>
+                <p>The phone number is already captured, so staff only enters what is still useful.</p>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label><span>Full name *</span><input id="new-name" placeholder="Customer name"></label>
+              <label><span>Phone</span><input id="new-phone" readonly></label>
+              <label><span>Email</span><input id="new-email" type="email" placeholder="Optional"></label>
+              <label><span>Birthday</span><input id="new-dob" type="date"></label>
+            </div>
+
+            <div class="preference-block">
+              <h3>Anything useful to remember?</h3>
+              <p>Tap a preference if it comes up naturally during the call.</p>
+              <div id="new-cats" class="chips"></div>
+            </div>
+
+            <div class="actions">
+              <button id="cancel-new" class="secondary">Cancel</button>
+              <button id="save-new" class="primary">Save & Continue</button>
+            </div>
+          </section>
+
+          <section id="quick-update" class="card hidden">
+            <div class="step-row">
+              <span class="step-number">2</span>
+              <div>
+                <h2>Quick update</h2>
+                <p>Change a preference or leave a short note without breaking the flow of the call.</p>
+              </div>
+            </div>
+
+            <h3>Preferences</h3>
+            <div id="edit-cats" class="chips preference-actions"></div>
+
+            <label class="note-field">
+              <span>Add note</span>
+              <textarea id="quick-note" rows="3" placeholder="e.g. Prefers a quieter table when possible"></textarea>
+            </label>
+
+            <div class="actions">
+              <button id="back-update" class="secondary">Back</button>
+              <button id="save-update" class="primary">Save Update</button>
+            </div>
+          </section>
+
+          <section id="reservation" class="card reservation-card hidden">
+            <div class="step-row">
+              <span class="step-number">3</span>
+              <div>
+                <h2>Book the table</h2>
+                <p id="reservation-for"></p>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label><span>Date *</span><input id="res-date" type="date"></label>
+              <label><span>Time *</span><input id="res-time" type="time"></label>
+              <label><span>Party size *</span><input id="res-party" type="number" min="1" value="2"></label>
+              <label>
+                <span>Special occasion</span>
+                <select id="res-occasion">
+                  <option value="">None</option>
+                  <option>Birthday</option>
+                  <option>Anniversary</option>
+                  <option>Business dinner</option>
+                  <option>Family gathering</option>
+                  <option>Other</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="note-field">
+              <span>Reservation note</span>
+              <textarea id="res-note" rows="2" placeholder="Optional"></textarea>
+            </label>
+
+            <div class="actions">
+              <button id="back-res" class="secondary">Back</button>
+              <button id="save-res" class="primary">Create Reservation</button>
+            </div>
+          </section>
+
+          <section id="walkin-form" class="card walkin-card hidden">
+            <div class="step-row">
+              <span class="step-number">3</span>
+              <div>
+                <h2>Record the walk-in</h2>
+                <p id="walkin-for"></p>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label><span>Party size *</span><input id="walkin-party" type="number" min="1" value="2"></label>
+              <label>
+                <span>Special occasion</span>
+                <select id="walkin-occasion">
+                  <option value="">None</option><option>Birthday</option><option>Anniversary</option><option>Family gathering</option><option>Other</option>
+                </select>
+              </label>
+            </div>
+            <label class="note-field"><span>Walk-in note</span><textarea id="walkin-note" rows="2" placeholder="Optional"></textarea></label>
+            <div class="actions">
+              <button id="back-walkin" class="secondary">Back</button>
+              <button id="save-walkin" class="primary">Record Arrival</button>
+            </div>
+          </section>
+
+          <section id="success" class="card success hidden">
+            <span class="success-icon">✓</span>
+            <div>
+              <small id="success-kicker">SAVED</small>
+              <h2 id="success-title"></h2>
+              <p id="success-text"></p>
+            </div>
+            <button id="next-action" class="primary">Next</button>
+          </section>
+
+          <section class="card arrivals-card">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">SERVICE STATUS</span>
+                <h2>Reservations & arrivals</h2>
+                <p class="muted">When a booking arrives, mark them here. Completed visits become part of the customer’s history.</p>
+              </div>
+            </div>
+            <div id="arrival-list" class="arrival-list"></div>
+          </section>
+        </div>
+
+        <aside class="today-panel">
+          <span class="eyebrow">AT A GLANCE</span>
+          <h2>Today’s desk</h2>
+          <p class="muted">A quick snapshot while staff are taking calls.</p>
+
+          <div class="desk-stat">
+            <span>Saved customers</span>
+            <strong id="desk-customers">0</strong>
+          </div>
+          <div class="desk-stat">
+            <span>Open bookings</span>
+            <strong id="desk-bookings">0</strong>
+          </div>
+
+          <div class="tiny-divider"></div>
+
+          <h3>Recent reservations</h3>
+          <div id="recent" class="recent-list"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- CUSTOMERS VIEW -->
+    <section id="customers-view" class="view">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">CUSTOMER RECORDS</span>
+          <h1>People we’ve seen before</h1>
+          <p>Open any customer to review or edit their details.</p>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="lookup">
+          <label><span>Search customers</span><input id="customer-search" placeholder="Phone, name or email"></label>
+          <button id="search-btn" class="primary">Search</button>
+        </div>
+        <div id="customer-list" class="customer-list"></div>
+      </section>
+
+      <section id="profile" class="card hidden">
+        <div class="customer-head">
+          <div>
+            <small class="pill">Customer Record</small>
+            <h2 id="profile-name"></h2>
+            <p id="profile-contact"></p>
+          </div>
+          <div class="profile-actions">
+            <button id="edit-profile" class="primary">Edit Details</button>
+            <button id="close-profile" class="secondary">Close</button>
+          </div>
+        </div>
+
+        <div id="profile-read">
+          <div class="two">
+            <div class="soft-panel">
+              <h3>Customer details</h3>
+              <dl>
+                <div><dt>Phone</dt><dd id="profile-phone"></dd></div>
+                <div><dt>Email</dt><dd id="profile-email"></dd></div>
+                <div><dt>Birthday</dt><dd id="profile-dob"></dd></div>
+              </dl>
+            </div>
+            <div class="soft-panel">
+              <h3>Customer history</h3>
+              <p id="profile-history"></p>
+            </div>
+          </div>
+          <div class="soft-panel profile-notes-panel"><h3>Preferences</h3><div id="profile-prefs" class="chips"></div></div>
+          <div class="soft-panel profile-notes-panel"><h3>Notes</h3><div id="profile-notes"></div></div>
+        </div>
+
+        <div id="profile-edit" class="hidden">
+          <div class="form-grid">
+            <label><span>Full name *</span><input id="edit-name"></label>
+            <label><span>Phone *</span><input id="edit-phone" type="tel"></label>
+            <label><span>Email</span><input id="edit-email" type="email"></label>
+            <label><span>Birthday</span><input id="edit-dob" type="date"></label>
+          </div>
+          <div class="preference-block"><h3>Preferences</h3><div id="edit-profile-cats" class="chips"></div></div>
+          <div class="actions"><button id="cancel-profile-edit" class="secondary">Cancel</button><button id="save-profile-edit" class="primary">Save Changes</button></div>
+        </div>
+      </section>
+    </section>
+
+    <!-- INSIGHTS VIEW -->
+    <section id="insights-view" class="view">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">INSIGHTS & SETTINGS</span>
+          <h1>A clearer picture of the customers</h1>
+          <p>Simple summaries and editable categories requested during the client review.</p>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div><small>With preferences</small><b id="pct-prefs">0%</b></div>
+        <div><small>Dietary data</small><b id="pct-dietary">0%</b></div>
+        <div><small>Birthday recorded</small><b id="pct-dob">0%</b></div>
+        <div><small>Previous visits</small><b id="pct-visits">0%</b></div>
+      </div>
+
+      <div class="manager-grid">
+        <section class="card">
+          <span class="eyebrow">CUSTOMISE</span>
+          <h2>Quick categories</h2>
+          <p class="muted">Add categories that staff can use without changing the website code.</p>
+          <div class="lookup compact-lookup">
+            <label><span>New category</span><input id="new-category" placeholder="e.g. Gluten free"></label>
+            <button id="add-category" class="primary">Add</button>
+          </div>
+          <div id="category-list" class="chips category-manager"></div>
+        </section>
+
+        <section class="card manager-note">
+          <span class="eyebrow">ACCESS</span>
+          <h2>Role-based access</h2>
+          <p>
+            Staff can handle reservations, walk-ins, arrivals and customer information.
+            Manager accounts also see insights, editable categories, and future access to financial information.
+          </p>
+          <div class="access-lines">
+            <span><b>Staff</b> Reservations, walk-ins, arrivals, customer records</span>
+            <span><b>Manager</b> All staff tools + insights + category controls</span>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>

@@ -1,456 +1,55 @@
-const seedCustomers = [
-  {
-    id: 1001,
-    fullName: "Anh Nguyen",
-    phone: "0412 555 120",
-    email: "anh.nguyen@example.com",
-    dob: "1994-11-08",
-    preferences: ["Window seating", "Vegetarian", "Sparkling water"],
-    visits: [
-      { date: "2026-10-04", partySize: 2, status: "Completed", occasion: "Dinner" },
-      { date: "2026-08-17", partySize: 4, status: "Completed", occasion: "Birthday" }
-    ],
-    notes: [
-      { text: "Celebrated a birthday on the previous visit.", by: "Staff User", at: "2026-08-17 20:15" },
-      { text: "Prefers quieter seating when available.", by: "Staff User", at: "2026-10-04 18:30" }
-    ]
-  },
-  {
-    id: 1002,
-    fullName: "Sophie Martin",
-    phone: "0433 901 442",
-    email: "sophie.martin@example.com",
-    dob: "1998-03-22",
-    preferences: ["No peanuts", "Outdoor seating"],
-    visits: [
-      { date: "2026-09-21", partySize: 3, status: "Completed", occasion: "Dinner" }
-    ],
-    notes: [
-      { text: "Asked staff to note a peanut allergy-related dining requirement.", by: "Staff User", at: "2026-09-21 19:10" }
-    ]
-  },
-  {
-    id: 1003,
-    fullName: "Daniel Lee",
-    phone: "0401 774 226",
-    email: "daniel.lee@example.com",
-    dob: "2000-12-02",
-    preferences: ["Favourite dish: Bún bò Huế"],
-    visits: [],
-    notes: []
-  }
+const seed=[
+{id:1001,name:"Anh Nguyen",phone:"0412 555 120",email:"anh.nguyen@example.com",dob:"1994-11-08",prefs:["Vegetarian","Window seating"],notes:[{text:"Prefers quieter seating when available.",by:"Staff User",at:"04/10/2026"}],reservations:[{id:5001,date:"2026-11-03",time:"18:30",party:2,occasion:"",note:"",status:"Booked",type:"Reservation"},{id:5002,date:"2026-10-04",time:"18:30",party:2,occasion:"",note:"",status:"Completed",type:"Reservation"}]},
+{id:1002,name:"Sophie Martin",phone:"0433 901 442",email:"sophie.martin@example.com",dob:"1998-03-22",prefs:["Allergy / dietary requirement","Outdoor seating"],notes:[{text:"Customer advised staff of a peanut allergy-related dining requirement.",by:"Staff User",at:"21/09/2026"}],reservations:[{id:5003,date:"2026-09-21",time:"19:15",party:3,occasion:"",note:"",status:"Completed",type:"Reservation"}]},
+{id:1003,name:"Daniel Lee",phone:"0401 774 226",email:"daniel.lee@example.com",dob:"2000-12-02",prefs:["Favourite dish"],notes:[],reservations:[]}
 ];
-
-
-const defaultCategories = [
-  "Vegan",
-  "Vegetarian",
-  "Allergy / dietary requirement",
-  "Window seating",
-  "Outdoor seating",
-  "Quiet seating",
-  "Favourite dish",
-  "Special occasion"
-];
-
-let customers = JSON.parse(localStorage.getItem("comNhaCustomers")) || seedCustomers;
-let categories = JSON.parse(localStorage.getItem("comNhaCategories")) || defaultCategories;
-let currentRole = localStorage.getItem("comNhaRole") || "staff";
-let activeCustomerId = null;
-
-function saveCustomers() {
-  localStorage.setItem("comNhaCustomers", JSON.stringify(customers));
-  updateDashboardStats();
-}
-
-function updateDashboardStats() {
-  document.getElementById("total-customers").textContent = customers.length;
-  document.getElementById("returning-customers").textContent =
-    customers.filter(c => c.visits.length > 0).length;
-
-  const today = new Date();
-  const upcoming = customers.filter(c => {
-    if (!c.dob) return false;
-    const [y, m, d] = c.dob.split("-").map(Number);
-    const thisYear = new Date(today.getFullYear(), m - 1, d);
-    const next = thisYear < today ? new Date(today.getFullYear() + 1, m - 1, d) : thisYear;
-    const diffDays = (next - today) / (1000 * 60 * 60 * 24);
-    return diffDays <= 60;
-  }).length;
-
-  document.getElementById("birthday-count").textContent = upcoming;
-}
-
-function customerStatus(customer) {
-  return customer.visits.length > 0 ? "Returning Customer" : "New Customer";
-}
-
-function normalisePhone(value) {
-  return (value || "").replace(/\D/g, "");
-}
-
-function matches(customer, query) {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const phoneQuery = normalisePhone(q);
-  const phoneMatch = phoneQuery.length >= 3 && normalisePhone(customer.phone).includes(phoneQuery);
-  return phoneMatch ||
-    (customer.fullName || "").toLowerCase().includes(q) ||
-    (customer.email || "").toLowerCase().includes(q);
-}
-
-function resultMarkup(customer) {
-  const status = customerStatus(customer);
-  const badgeClass = status.startsWith("Returning") ? "returning" : "new";
-  return `
-    <div class="result-item" data-customer-id="${customer.id}">
-      <div>
-        <h4>${customer.fullName}</h4>
-        <p>${customer.phone || "No phone"} • ${customer.email || "No email"}</p>
-      </div>
-      <span class="badge ${badgeClass}">${status}</span>
-    </div>
-  `;
-}
-
-function renderResults(targetId, query) {
-  const target = document.getElementById(targetId);
-  const results = customers.filter(c => matches(c, query));
-
-  target.innerHTML = results.length
-    ? results.map(resultMarkup).join("")
-    : `<div class="empty-state">No matching customer found.</div>`;
-
-  target.querySelectorAll(".result-item").forEach(item => {
-    item.addEventListener("click", () => {
-      const id = Number(item.dataset.customerId);
-      showCustomerProfile(id);
-      switchView("customers");
-    });
-  });
-}
-
-function showCustomerProfile(id) {
-  const customer = customers.find(c => c.id === id);
-  if (!customer) return;
-
-  activeCustomerId = id;
-  document.getElementById("profile-panel").classList.remove("hidden");
-  document.getElementById("profile-name").textContent = customer.fullName;
-  document.getElementById("profile-contact").textContent =
-    `${customer.phone || "No phone"} • ${customer.email || "No email"}`;
-  document.getElementById("profile-phone").textContent = customer.phone || "—";
-  document.getElementById("profile-email").textContent = customer.email || "—";
-  document.getElementById("profile-birthday").textContent =
-    customer.dob ? new Date(customer.dob + "T00:00:00").toLocaleDateString("en-AU") : "—";
-  document.getElementById("profile-visits-count").textContent = customer.visits.length;
-  document.getElementById("customer-id-label").textContent = `Customer ID ${customer.id}`;
-
-  const status = customerStatus(customer);
-  const statusEl = document.getElementById("customer-status");
-  statusEl.textContent = status;
-  statusEl.className = `badge ${status.startsWith("Returning") ? "returning" : "new"}`;
-
-  document.getElementById("preferences-list").innerHTML =
-    customer.preferences.length
-      ? customer.preferences.map(p => `<span class="chip">${p}</span>`).join("")
-      : `<span class="muted">No preferences recorded.</span>`;
-
-  renderQuickCategories(customer);
-
-  document.getElementById("visit-history").innerHTML =
-    customer.visits.length
-      ? `
-        <table class="visit-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Party Size</th>
-              <th>Status</th>
-              <th>Occasion</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${customer.visits.map(v => `
-              <tr>
-                <td>${new Date(v.date + "T00:00:00").toLocaleDateString("en-AU")}</td>
-                <td>${v.partySize}</td>
-                <td>${v.status}</td>
-                <td>${v.occasion || "—"}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      `
-      : `<div class="empty-state">No previous visits. This customer is currently classified as new.</div>`;
-
-  document.getElementById("notes-list").innerHTML =
-    customer.notes.length
-      ? customer.notes.slice().reverse().map(n => `
-          <div class="note">
-            <p>${n.text}</p>
-            <small>${n.by} • ${n.at}</small>
-          </div>
-        `).join("")
-      : `<div class="empty-state">No customer notes recorded.</div>`;
-
-  document.getElementById("profile-panel").scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function switchView(viewName) {
-  if (viewName === "manager" && currentRole !== "manager") return;
-  document.querySelectorAll(".view").forEach(v => v.classList.remove("active-view"));
-  document.getElementById(`${viewName}-view`).classList.add("active-view");
-
-  function renderQuickCategories(customer) {
-  const target = document.getElementById("quick-categories");
-  target.innerHTML = categories.map(category => {
-    const selected = customer.preferences.includes(category);
-    return `<button type="button" class="category-btn ${selected ? "selected" : ""}" data-category="${category}">${selected ? "✓ " : ""}${category}</button>`;
-  }).join("");
-
-  target.querySelectorAll(".category-btn").forEach(button => {
-    button.addEventListener("click", () => {
-      const value = button.dataset.category;
-      const index = customer.preferences.indexOf(value);
-      if (index >= 0) customer.preferences.splice(index, 1);
-      else customer.preferences.push(value);
-      saveCustomers();
-      showCustomerProfile(customer.id);
-      updateManagerStats();
-    });
-  });
-}
-
-function updateManagerStats() {
-  const total = customers.length || 1;
-  const dietaryTerms = ["Vegan", "Vegetarian", "Allergy / dietary requirement"];
-  const returning = customers.filter(c => c.visits.length > 0).length;
-  const dietary = customers.filter(c => c.preferences.some(p => dietaryTerms.includes(p))).length;
-  const withPreferences = customers.filter(c => c.preferences.length > 0).length;
-  const withBirthday = customers.filter(c => Boolean(c.dob)).length;
-  const pct = n => `${Math.round((n / total) * 100)}%`;
-  document.getElementById("pct-returning").textContent = pct(returning);
-  document.getElementById("pct-dietary").textContent = pct(dietary);
-  document.getElementById("pct-preferences").textContent = pct(withPreferences);
-  document.getElementById("pct-birthday").textContent = pct(withBirthday);
-}
-
-function saveCategories() {
-  localStorage.setItem("comNhaCategories", JSON.stringify(categories));
-  renderManagerCategories();
-  if (activeCustomerId !== null) {
-    const c = customers.find(x => x.id === activeCustomerId);
-    if (c) renderQuickCategories(c);
-  }
-}
-
-function renderManagerCategories() {
-  const target = document.getElementById("manager-category-list");
-  if (!target) return;
-  target.innerHTML = categories.map(category => `<span class="manager-category-item">${category}<button type="button" class="remove-category-btn" data-category="${category}">×</button></span>`).join("");
-  target.querySelectorAll(".remove-category-btn").forEach(button => {
-    button.addEventListener("click", () => {
-      if (currentRole !== "manager") return;
-      categories = categories.filter(c => c !== button.dataset.category);
-      saveCategories();
-    });
-  });
-}
-
-function applyRole() {
-  const isManager = currentRole === "manager";
-  document.getElementById("role-select").value = currentRole;
-  document.getElementById("sidebar-role").textContent = isManager ? "Manager access • Prototype" : "Staff access • Prototype";
-  document.querySelectorAll(".manager-nav").forEach(el => el.classList.toggle("hidden", !isManager));
-  if (!isManager && document.getElementById("manager-view").classList.contains("active-view")) switchView("dashboard");
-}
-
-document.querySelectorAll(".nav-item").forEach(item => {
-    item.classList.toggle("active", item.dataset.view === viewName);
-  });
-
-  const titles = {
-    dashboard: "Dashboard",
-    customers: "Customers",
-    manager: "Manager",
-    about: "Prototype Notes"
-  };
-  document.getElementById("page-title").textContent = titles[viewName];
-  if (viewName === "manager") {
-    updateManagerStats();
-    renderManagerCategories();
-  }
-}
-
-function renderQuickCategories(customer) {
-  const target = document.getElementById("quick-categories");
-  target.innerHTML = categories.map(category => {
-    const selected = customer.preferences.includes(category);
-    return `<button type="button" class="category-btn ${selected ? "selected" : ""}" data-category="${category}">${selected ? "✓ " : ""}${category}</button>`;
-  }).join("");
-
-  target.querySelectorAll(".category-btn").forEach(button => {
-    button.addEventListener("click", () => {
-      const value = button.dataset.category;
-      const index = customer.preferences.indexOf(value);
-      if (index >= 0) customer.preferences.splice(index, 1);
-      else customer.preferences.push(value);
-      saveCustomers();
-      showCustomerProfile(customer.id);
-      updateManagerStats();
-    });
-  });
-}
-
-function updateManagerStats() {
-  const total = customers.length || 1;
-  const dietaryTerms = ["Vegan", "Vegetarian", "Allergy / dietary requirement"];
-  const returning = customers.filter(c => c.visits.length > 0).length;
-  const dietary = customers.filter(c => c.preferences.some(p => dietaryTerms.includes(p))).length;
-  const withPreferences = customers.filter(c => c.preferences.length > 0).length;
-  const withBirthday = customers.filter(c => Boolean(c.dob)).length;
-  const pct = n => `${Math.round((n / total) * 100)}%`;
-  document.getElementById("pct-returning").textContent = pct(returning);
-  document.getElementById("pct-dietary").textContent = pct(dietary);
-  document.getElementById("pct-preferences").textContent = pct(withPreferences);
-  document.getElementById("pct-birthday").textContent = pct(withBirthday);
-}
-
-function saveCategories() {
-  localStorage.setItem("comNhaCategories", JSON.stringify(categories));
-  renderManagerCategories();
-  if (activeCustomerId !== null) {
-    const c = customers.find(x => x.id === activeCustomerId);
-    if (c) renderQuickCategories(c);
-  }
-}
-
-function renderManagerCategories() {
-  const target = document.getElementById("manager-category-list");
-  if (!target) return;
-  target.innerHTML = categories.map(category => `<span class="manager-category-item">${category}<button type="button" class="remove-category-btn" data-category="${category}">×</button></span>`).join("");
-  target.querySelectorAll(".remove-category-btn").forEach(button => {
-    button.addEventListener("click", () => {
-      if (currentRole !== "manager") return;
-      categories = categories.filter(c => c !== button.dataset.category);
-      saveCategories();
-    });
-  });
-}
-
-function applyRole() {
-  const isManager = currentRole === "manager";
-  document.getElementById("role-select").value = currentRole;
-  document.getElementById("sidebar-role").textContent = isManager ? "Manager access • Prototype" : "Staff access • Prototype";
-  document.querySelectorAll(".manager-nav").forEach(el => el.classList.toggle("hidden", !isManager));
-  if (!isManager && document.getElementById("manager-view").classList.contains("active-view")) switchView("dashboard");
-}
-
-document.querySelectorAll(".nav-item").forEach(item => {
-  item.addEventListener("click", () => switchView(item.dataset.view));
-});
-
-document.getElementById("role-select").addEventListener("change", e => {
-  currentRole = e.target.value;
-  localStorage.setItem("comNhaRole", currentRole);
-  applyRole();
-});
-
-document.getElementById("add-category-btn").addEventListener("click", () => {
-  if (currentRole !== "manager") return;
-  const input = document.getElementById("new-category-input");
-  const value = input.value.trim();
-  if (!value) return;
-  if (!categories.some(c => c.toLowerCase() === value.toLowerCase())) {
-    categories.push(value);
-    saveCategories();
-  }
-  input.value = "";
-});
-
-document.getElementById("customer-search-btn").addEventListener("click", () => {
-  renderResults("customer-results", document.getElementById("customer-search").value);
-});
-
-document.getElementById("customer-search").addEventListener("input", e => {
-  renderResults("customer-results", e.target.value);
-});
-
-document.getElementById("dashboard-search-btn").addEventListener("click", () => {
-  renderResults("dashboard-results", document.getElementById("dashboard-search").value);
-});
-
-document.getElementById("dashboard-search").addEventListener("input", e => {
-  renderResults("dashboard-results", e.target.value);
-});
-
-document.getElementById("close-profile").addEventListener("click", () => {
-  document.getElementById("profile-panel").classList.add("hidden");
-  activeCustomerId = null;
-});
-
-document.getElementById("save-note-btn").addEventListener("click", () => {
-  const noteText = document.getElementById("new-note").value.trim();
-  if (!noteText || activeCustomerId === null) return;
-
-  const customer = customers.find(c => c.id === activeCustomerId);
-  const now = new Date();
-  customer.notes.push({
-    text: noteText,
-    by: "Michael Thuku",
-    at: now.toLocaleString("en-AU")
-  });
-
-  document.getElementById("new-note").value = "";
-  saveCustomers();
-  showCustomerProfile(activeCustomerId);
-});
-
-const modal = document.getElementById("add-customer-modal");
-
-function closeModal() {
-  modal.classList.add("hidden");
-}
-
-document.getElementById("add-customer-btn").addEventListener("click", () => modal.classList.remove("hidden"));
-document.getElementById("close-modal").addEventListener("click", closeModal);
-document.getElementById("cancel-add-customer").addEventListener("click", closeModal);
-
-document.getElementById("save-customer").addEventListener("click", () => {
-  const name = document.getElementById("new-name").value.trim();
-  const phone = document.getElementById("new-phone").value.trim();
-  if (!name || !phone) {
-    alert("Please enter the customer name and phone number.");
-    return;
-  }
-
-  const newCustomer = {
-    id: Math.max(...customers.map(c => c.id), 1000) + 1,
-    fullName: name,
-    phone,
-    email: document.getElementById("new-email").value.trim(),
-    dob: document.getElementById("new-dob").value,
-    preferences: [],
-    visits: [],
-    notes: []
-  };
-
-  customers.push(newCustomer);
-  saveCustomers();
-
-  ["new-name", "new-phone", "new-email", "new-dob"].forEach(id => {
-    document.getElementById(id).value = "";
-  });
-
-  closeModal();
-  renderResults("customer-results", "");
-  showCustomerProfile(newCustomer.id);
-});
-
-updateDashboardStats();
-updateManagerStats();
-renderManagerCategories();
-renderResults("customer-results", "");
-renderResults("dashboard-results", "");
-applyRole();
+const defaults=["Vegan","Vegetarian","Allergy / dietary requirement","Window seating","Outdoor seating","Quiet seating","Favourite dish","Special occasion"];
+const accounts={staff:{username:"staff",password:"staff123",name:"Cơm Nhà Staff",role:"staff"},manager:{username:"manager",password:"manager123",name:"Restaurant Manager",role:"manager"}};
+let customers=JSON.parse(localStorage.getItem("cnCustomersV5"))||seed;
+let categories=JSON.parse(localStorage.getItem("cnCategoriesV5"))||defaults;
+let session=null,activeId=null,newPrefs=[],serviceMode="reservation",profileId=null,profileEditPrefs=[];
+const $=id=>document.getElementById(id),digits=v=>String(v||"").replace(/\D/g,"");
+const formatPhone=v=>{const d=digits(v);return d.length===10?`${d.slice(0,4)} ${d.slice(4,7)} ${d.slice(7)}`:v.trim()};
+const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+const findPhone=v=>customers.find(c=>digits(c.phone)===digits(v));
+const completed=c=>c.reservations.filter(r=>r.status==="Completed").length;
+function save(){localStorage.setItem("cnCustomersV5",JSON.stringify(customers));localStorage.setItem("cnCategoriesV5",JSON.stringify(categories));renderRecent();renderCustomers($("customer-search").value);renderArrivals();managerStats();updateDesk();if(profileId)renderProfile(profileId)}
+function login(username,password){const a=Object.values(accounts).find(x=>x.username===username.trim().toLowerCase()&&x.password===password);if(!a)return false;session={...a};sessionStorage.setItem("cnSessionV5",JSON.stringify(session));openApp();return true}
+function openApp(){$("login-screen").classList.add("hidden");$("app-shell").classList.remove("hidden");$("signed-in-name").textContent=session.name;$("signed-in-role").textContent=session.role==="manager"?"Manager access":"Staff access";$("user-avatar").textContent=session.role==="manager"?"M":"S";document.querySelectorAll(".insights-nav").forEach(x=>x.classList.toggle("hidden",session.role!=="manager"));switchView("reservation");renderRecent();renderCustomers();renderArrivals();managerStats();updateDesk();setServiceMode("reservation")}
+function logout(){session=null;sessionStorage.removeItem("cnSessionV5");$("app-shell").classList.add("hidden");$("login-screen").classList.remove("hidden");$("login-form").reset();$("login-error").classList.add("hidden")}
+function setServiceMode(mode){serviceMode=mode;$("mode-reservation").classList.toggle("active",mode==="reservation");$("mode-walkin").classList.toggle("active",mode==="walkin");$("identity-title").textContent=mode==="reservation"?"Who’s calling?":"Who just walked in?";$("identity-help").textContent=mode==="reservation"?"Enter the phone number first. The system checks whether the customer already exists.":"Enter the guest’s phone number first so existing customer details can be recognised.";resetFlow(false)}
+function hideFlow(){["existing","new-customer","quick-update","reservation","walkin-form","success"].forEach(id=>$(id).classList.add("hidden"))}
+function resetFlow(clearPhone=true){activeId=null;newPrefs=[];hideFlow();$("lookup-msg").classList.add("hidden");if(clearPhone)$("phone").value="";if(!$("app-shell").classList.contains("hidden"))$("phone").focus()}
+function check(){const p=$("phone").value.trim();if(digits(p).length<8){$("lookup-msg").textContent="Please enter a valid phone number.";$("lookup-msg").classList.remove("hidden");return}$("lookup-msg").classList.add("hidden");hideFlow();const c=findPhone(p);if(c){activeId=c.id;showExisting(c);$("existing").classList.remove("hidden")}else{activeId=null;newPrefs=[];$("new-phone").value=formatPhone(p);$("new-name").value="";$("new-email").value="";$("new-dob").value="";renderNewCats();$("new-customer").classList.remove("hidden")}}
+function showExisting(c){$("ex-name").textContent=c.name;$("ex-contact").textContent=`${c.phone} • ${c.email||"No email"}`;$("ex-visits").textContent=completed(c);$("ex-notes").textContent=c.notes.length;$("ex-prefs").innerHTML=c.prefs.length?c.prefs.map(x=>`<span class="chip">${esc(x)}</span>`).join(""):`<span class="muted">No preferences recorded.</span>`;const n=c.notes.at(-1);$("ex-note").textContent=n?n.text:"No notes recorded.";$("existing-continue").textContent=serviceMode==="reservation"?"Continue to Reservation":"Continue as Walk-in"}
+function renderNewCats(){$("new-cats").innerHTML=categories.map(x=>`<button type="button" class="cat ${newPrefs.includes(x)?"selected":""}" data-cat="${esc(x)}">${newPrefs.includes(x)?"✓ ":""}${esc(x)}</button>`).join("");$("new-cats").querySelectorAll(".cat").forEach(b=>b.onclick=()=>{const x=b.dataset.cat,i=newPrefs.indexOf(x);i>=0?newPrefs.splice(i,1):newPrefs.push(x);renderNewCats()})}
+function saveNew(){const name=$("new-name").value.trim(),phone=$("new-phone").value.trim();if(!name){alert("Please enter the customer's name.");return}const f=findPhone(phone);if(f){activeId=f.id;hideFlow();showExisting(f);$("existing").classList.remove("hidden");return}const c={id:Math.max(...customers.map(x=>x.id),1000)+1,name,phone:formatPhone(phone),email:$("new-email").value.trim(),dob:$("new-dob").value,prefs:[...newPrefs],notes:[],reservations:[]};customers.push(c);activeId=c.id;save();continueService(c)}
+function continueService(c=customers.find(x=>x.id===activeId)){serviceMode==="reservation"?openReservation(c):openWalkin(c)}
+function renderEditCats(c){$("edit-cats").innerHTML=categories.map(x=>`<button type="button" class="cat ${c.prefs.includes(x)?"selected":""}" data-cat="${esc(x)}">${c.prefs.includes(x)?"✓ ":""}${esc(x)}</button>`).join("");$("edit-cats").querySelectorAll(".cat").forEach(b=>b.onclick=()=>{const x=b.dataset.cat,i=c.prefs.indexOf(x);i>=0?c.prefs.splice(i,1):c.prefs.push(x);save();renderEditCats(c)})}
+function quickEdit(){const c=customers.find(x=>x.id===activeId);$("existing").classList.add("hidden");renderEditCats(c);$("quick-note").value="";$("quick-update").classList.remove("hidden")}
+function saveUpdate(){const c=customers.find(x=>x.id===activeId),n=$("quick-note").value.trim();if(n)c.notes.push({text:n,by:session.role==="manager"?"Manager User":"Staff User",at:new Date().toLocaleString("en-AU")});save();$("quick-update").classList.add("hidden");showExisting(c);$("existing").classList.remove("hidden")}
+function openReservation(c){hideFlow();$("reservation-for").textContent=`For ${c.name} • ${c.phone}`;const now=new Date(),d=new Date(now-now.getTimezoneOffset()*60000).toISOString().slice(0,10);$("res-date").value=d;$("res-time").value="";$("res-party").value=2;$("res-occasion").value="";$("res-note").value="";$("reservation").classList.remove("hidden")}
+function saveReservation(){const c=customers.find(x=>x.id===activeId),date=$("res-date").value,time=$("res-time").value,party=+$("res-party").value;if(!date||!time||party<1){alert("Please enter the date, time and party size.");return}const r={id:Date.now(),date,time,party,occasion:$("res-occasion").value,note:$("res-note").value.trim(),status:"Booked",type:"Reservation"};c.reservations.push(r);if(r.note)c.notes.push({text:`Reservation note: ${r.note}`,by:session.role==="manager"?"Manager User":"Staff User",at:new Date().toLocaleString("en-AU")});save();showSuccess("RESERVATION SAVED",`Table booked for ${c.name}`,`${date} at ${time} • Party of ${party}${r.occasion?` • ${r.occasion}`:""}`)}
+function openWalkin(c){hideFlow();$("walkin-for").textContent=`For ${c.name} • ${c.phone}`;$("walkin-party").value=2;$("walkin-occasion").value="";$("walkin-note").value="";$("walkin-form").classList.remove("hidden")}
+function saveWalkin(){const c=customers.find(x=>x.id===activeId),party=+$("walkin-party").value;if(party<1){alert("Please enter the party size.");return}const now=new Date(),date=new Date(now-now.getTimezoneOffset()*60000).toISOString().slice(0,10),time=now.toTimeString().slice(0,5);const r={id:Date.now(),date,time,party,occasion:$("walkin-occasion").value,note:$("walkin-note").value.trim(),status:"Arrived",type:"Walk-in"};c.reservations.push(r);if(r.note)c.notes.push({text:`Walk-in note: ${r.note}`,by:session.role==="manager"?"Manager User":"Staff User",at:new Date().toLocaleString("en-AU")});save();showSuccess("WALK-IN RECORDED",`${c.name} has arrived`,`Party of ${party} • ${time}${r.occasion?` • ${r.occasion}`:""}`)}
+function showSuccess(kicker,title,text){hideFlow();$("success-kicker").textContent=kicker;$("success-title").textContent=title;$("success-text").textContent=text;$("success").classList.remove("hidden")}
+function renderRecent(){const rows=[];customers.forEach(c=>c.reservations.forEach(r=>rows.push({c,r})));rows.sort((a,b)=>`${b.r.date}${b.r.time}`.localeCompare(`${a.r.date}${a.r.time}`));$("recent").innerHTML=rows.slice(0,5).map(({c,r})=>`<div class="recent-mini"><strong>${esc(c.name)}</strong><span>${esc(r.type||"Reservation")} • ${esc(r.date)} • ${esc(r.time||"")} • ${esc(r.status)}</span></div>`).join("")||`<p class="muted">No reservations yet.</p>`}
+function updateDesk(){$("desk-customers").textContent=customers.length;const open=customers.flatMap(c=>c.reservations).filter(r=>["Booked","Arrived"].includes(r.status)).length;$("desk-bookings").textContent=open}
+function statusClass(status){return "status-"+status.toLowerCase().replace(/\s+/g,"")}
+function renderArrivals(){const rows=[];customers.forEach(c=>c.reservations.forEach(r=>rows.push({c,r})));rows.sort((a,b)=>`${b.r.date}${b.r.time}`.localeCompare(`${a.r.date}${a.r.time}`));$("arrival-list").innerHTML=rows.slice(0,10).map(({c,r})=>{let actions="";if(r.status==="Booked")actions=`<button class="mini-btn arrive" data-action="arrive" data-customer="${c.id}" data-id="${r.id}">Mark Arrived</button><button class="mini-btn bad" data-action="noshow" data-customer="${c.id}" data-id="${r.id}">No-show</button><button class="mini-btn" data-action="cancel" data-customer="${c.id}" data-id="${r.id}">Cancel</button>`;else if(r.status==="Arrived")actions=`<button class="mini-btn complete" data-action="complete" data-customer="${c.id}" data-id="${r.id}">Complete Visit</button>`;return `<div class="arrival-item"><div><strong>${esc(c.name)}</strong><span>${esc(r.type||"Reservation")} • ${esc(c.phone)}</span></div><div><strong>${esc(r.date)} • ${esc(r.time||"")}</strong><span>Party of ${r.party}${r.occasion?` • ${esc(r.occasion)}`:""}</span><span class="status-badge ${statusClass(r.status)}">${esc(r.status)}</span></div><div class="row-actions">${actions}</div></div>`}).join("")||`<p class="muted">No bookings or walk-ins recorded.</p>`;$("arrival-list").querySelectorAll("[data-action]").forEach(b=>b.onclick=()=>updateReservationStatus(+b.dataset.customer,+b.dataset.id,b.dataset.action))}
+function updateReservationStatus(customerId,resId,action){const c=customers.find(x=>x.id===customerId);if(!c)return;const r=c.reservations.find(x=>x.id===resId);if(!r)return;const next={arrive:"Arrived",complete:"Completed",noshow:"No-show",cancel:"Cancelled"}[action];if(!next)return;r.status=next;if(next==="Completed")c.notes.push({text:`${r.type||"Reservation"} completed on ${r.date}.`,by:"System",at:new Date().toLocaleString("en-AU")});save()}
+function renderCustomers(q=""){const t=q.toLowerCase(),pd=digits(q);const rows=customers.filter(c=>!q||digits(c.phone).includes(pd)||c.name.toLowerCase().includes(t)||(c.email||"").toLowerCase().includes(t));$("customer-list").innerHTML=rows.map(c=>`<button type="button" class="customer-item" data-id="${c.id}"><div><strong>${esc(c.name)}</strong><span>${esc(c.phone)}</span></div><div><strong>${esc(c.email||"No email")}</strong><span>${c.reservations.length} booking/visit record(s)</span></div><small class="pill">Open record →</small></button>`).join("")||`<p class="muted">No matching customer.</p>`;$("customer-list").querySelectorAll(".customer-item").forEach(b=>b.onclick=()=>showProfile(+b.dataset.id))}
+function renderProfile(id){const c=customers.find(x=>x.id===id);if(!c)return;profileId=id;$("profile-name").textContent=c.name;$("profile-contact").textContent=`${c.phone} • ${c.email||"No email"}`;$("profile-phone").textContent=c.phone;$("profile-email").textContent=c.email||"—";$("profile-dob").textContent=c.dob||"—";$("profile-prefs").innerHTML=c.prefs.length?c.prefs.map(x=>`<span class="chip">${esc(x)}</span>`).join(""):`<span class="muted">No preferences.</span>`;$("profile-history").textContent=`${c.reservations.length} booking/visit record(s), ${completed(c)} completed visit(s).`;$("profile-notes").innerHTML=c.notes.length?c.notes.slice().reverse().map(n=>`<p>${esc(n.text)} <small class="muted">${esc(n.at)}</small></p>`).join(""):`<p class="muted">No notes.</p>`;$("profile-read").classList.remove("hidden");$("profile-edit").classList.add("hidden");$("profile").classList.remove("hidden")}
+function showProfile(id){renderProfile(id);$("profile").scrollIntoView({behavior:"smooth",block:"start"})}
+function beginProfileEdit(){const c=customers.find(x=>x.id===profileId);if(!c)return;$("edit-name").value=c.name;$("edit-phone").value=c.phone;$("edit-email").value=c.email||"";$("edit-dob").value=c.dob||"";profileEditPrefs=[...c.prefs];renderProfileEditCats();$("profile-read").classList.add("hidden");$("profile-edit").classList.remove("hidden")}
+function renderProfileEditCats(){$("edit-profile-cats").innerHTML=categories.map(x=>`<button type="button" class="cat ${profileEditPrefs.includes(x)?"selected":""}" data-cat="${esc(x)}">${profileEditPrefs.includes(x)?"✓ ":""}${esc(x)}</button>`).join("");$("edit-profile-cats").querySelectorAll(".cat").forEach(b=>b.onclick=()=>{const x=b.dataset.cat,i=profileEditPrefs.indexOf(x);i>=0?profileEditPrefs.splice(i,1):profileEditPrefs.push(x);renderProfileEditCats()})}
+function saveProfileEdit(){const c=customers.find(x=>x.id===profileId);if(!c)return;const name=$("edit-name").value.trim(),phone=$("edit-phone").value.trim();if(!name||digits(phone).length<8){alert("Please enter a valid name and phone number.");return}const duplicate=customers.find(x=>x.id!==c.id&&digits(x.phone)===digits(phone));if(duplicate){alert("That phone number already belongs to another customer.");return}c.name=name;c.phone=formatPhone(phone);c.email=$("edit-email").value.trim();c.dob=$("edit-dob").value;c.prefs=[...profileEditPrefs];save();renderProfile(c.id)}
+function managerStats(){const total=customers.length||1,diet=["Vegan","Vegetarian","Allergy / dietary requirement"];$("pct-prefs").textContent=Math.round(customers.filter(c=>c.prefs.length).length/total*100)+"%";$("pct-dietary").textContent=Math.round(customers.filter(c=>c.prefs.some(p=>diet.includes(p))).length/total*100)+"%";$("pct-dob").textContent=Math.round(customers.filter(c=>c.dob).length/total*100)+"%";$("pct-visits").textContent=Math.round(customers.filter(c=>completed(c)).length/total*100)+"%";renderCategoryList()}
+function renderCategoryList(){$("category-list").innerHTML=categories.map(x=>`<span class="chip">${esc(x)} <button type="button" class="remove" data-cat="${esc(x)}">×</button></span>`).join("");$("category-list").querySelectorAll(".remove").forEach(b=>b.onclick=()=>{if(session?.role!=="manager")return;categories=categories.filter(x=>x!==b.dataset.cat);save()})}
+function switchView(v){if(v==="insights"&&session?.role!=="manager")return;document.querySelectorAll(".view").forEach(x=>x.classList.remove("active-view"));$(`${v}-view`).classList.add("active-view");document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.view===v));if(v==="customers")renderCustomers();if(v==="insights")managerStats()}
+$("login-form").addEventListener("submit",e=>{e.preventDefault();const ok=login($("login-username").value,$("login-password").value);$("login-error").classList.toggle("hidden",ok)});document.querySelectorAll(".demo-account").forEach(btn=>btn.addEventListener("click",()=>{$("login-username").value=btn.dataset.user;$("login-password").value=btn.dataset.pass;$("login-password").focus()}));document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>switchView(b.dataset.view));$("logout").onclick=logout;
+$("mode-reservation").onclick=()=>setServiceMode("reservation");$("mode-walkin").onclick=()=>setServiceMode("walkin");$("reset-flow").onclick=()=>resetFlow(true);$("check").onclick=check;$("phone").onkeydown=e=>{if(e.key==="Enter")check()};$("cancel-new").onclick=()=>resetFlow(true);$("save-new").onclick=saveNew;$("quick-edit").onclick=quickEdit;$("existing-continue").onclick=()=>continueService();$("back-update").onclick=()=>{const c=customers.find(x=>x.id===activeId);$("quick-update").classList.add("hidden");showExisting(c);$("existing").classList.remove("hidden")};$("save-update").onclick=saveUpdate;$("back-res").onclick=()=>{const c=customers.find(x=>x.id===activeId);$("reservation").classList.add("hidden");showExisting(c);$("existing").classList.remove("hidden")};$("save-res").onclick=saveReservation;$("back-walkin").onclick=()=>{const c=customers.find(x=>x.id===activeId);$("walkin-form").classList.add("hidden");showExisting(c);$("existing").classList.remove("hidden")};$("save-walkin").onclick=saveWalkin;$("next-action").onclick=()=>resetFlow(true);
+$("search-btn").onclick=()=>renderCustomers($("customer-search").value);$("customer-search").oninput=e=>renderCustomers(e.target.value);$("close-profile").onclick=()=>{$("profile").classList.add("hidden");profileId=null};$("edit-profile").onclick=beginProfileEdit;$("cancel-profile-edit").onclick=()=>renderProfile(profileId);$("save-profile-edit").onclick=saveProfileEdit;
+$("add-category").onclick=()=>{if(session?.role!=="manager")return;const v=$("new-category").value.trim();if(v&&!categories.some(x=>x.toLowerCase()===v.toLowerCase())){categories.push(v);$("new-category").value="";save()}};
+try{const saved=JSON.parse(sessionStorage.getItem("cnSessionV5"));if(saved&&["staff","manager"].includes(saved.role)){session=saved;openApp()}}catch(e){}
+renderRecent();renderCustomers();renderArrivals();managerStats();updateDesk();
