@@ -1,17 +1,30 @@
-# Cơm Nhà Reservation & Customer Tool V5
+# Cơm Nhà Guest Relationship Tool – Final Week 12 Prototype (V6)
 
 ## Demo accounts
-Staff: staff / staff123
-Manager: manager / manager123
+Staff: `staff` / `staff123`
+Manager: `manager` / `manager123`
 
-## V5 changes
-- Manager-only tab renamed to **Insights**.
-- Customer records are clickable and fully editable (name, phone, email, birthday, preferences).
-- Added **Phone Reservation** and **Walk-in** modes.
-- Walk-ins are recorded immediately with status **Arrived**.
-- Reservations start as **Booked**.
-- Staff can mark a booking **Arrived**, then **Complete Visit**, or mark **No-show** / **Cancelled**.
-- Completed visits count toward customer history.
-- Staff and Manager access remain separate.
+## Final features
+- Staff and Manager login
+- Manager-only Insights and Settings
+- Phone-first recognition with Australian +61 / 04 number normalisation
+- Reservations and walk-ins
+- Booked, Arrived, Completed, No-show and Cancelled states
+- Clickable customer names from Reservations & Arrivals
+- Editable profiles
+- New / Occasional / Regular / Frequent colour coding
+- Manager-editable frequency thresholds
+- Good to Know snapshot
+- Important dietary and birthday flags
+- Visit Story timeline
+- Previous order history
+- Change history / audit trail
+- Manager Insights with attention prompts and date filters
+- Manager settings for categories, reservation rules, surcharge, deposit threshold and grace period
+- Data-retention rules by customer activity
+- Manager review with Keep / De-identify / Delete
+- No automatic deletion
+- Responsive tablet-friendly design
 
-This remains a front-end prototype using localStorage.
+## Prototype limitation
+This is a front-end prototype using browser localStorage. A production version would require a secure server/database, protected audit logs, secure authentication, privacy governance, backups and integration with the restaurant's live POS/reservation environment.
